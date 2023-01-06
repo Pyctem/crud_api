@@ -33,3 +33,8 @@ export function getHandler (req, res) {
     res.setHeader('Content-Type', 'application/json;charset=utf-8');
     return res.end(data);
 }
+
+function errorHandler (res, code) {
+    res.statusCode = code;
+    res.end(`<h1>${code}</h1><h2>${http.STATUS_CODES[code]}</h2>`);
+}
