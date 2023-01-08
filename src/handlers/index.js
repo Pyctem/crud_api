@@ -122,18 +122,18 @@ export function putHandler (req, res) {
 
     const [id, ...other] = match[1]?.match(ID_REGEX) ?? [];
     
-    if (other.length) {
-        return errorHandler(res, 400);
-    }
-
-    if (!id) {
-        return errorHandler(res, 400);
+    if (!id || other.length) {
+        return errorHandler(res, 404);
     }
 
     const uuid = id.slice(1);
+    
+    if (!UUID_REGEX.test(uuid)) {
+        return errorHandler(res, 400);
+    }
 
     if (!users.has(uuid)) {
-        return errorHandler(res, 400);
+        return errorHandler(res, 404);
     }
 
     const buffers = [];
@@ -141,16 +141,19 @@ export function putHandler (req, res) {
     req
         .on('data', chunk => buffers.push(chunk))
         .on('end', () => {
-            const buffer = Buffer.concat(buffers);
-            const user = { ...users.get(uuid),  ...JSON.parse(buffer.toString()), id: uuid };
+            try {
+                const buffer = Buffer.concat(buffers);
+                const data = JSON.parse(buffer.toString());
+                const user = { ...users.get(uuid),  ...data, id: uuid };
 
-            users.delete(uuid);
-            users.set(uuid, user);
+                users.delete(uuid);
+                users.set(uuid, user);
 
-            console.log(users);
-
-            res.setHeader('Content-Type', 'application/json;charset=utf-8');
-            res.end(`{"message": "User ${uuid} has updated"}`);
+                res.setHeader('Content-Type', 'application/json;charset=utf-8');
+                res.end(`{"message": "User ${uuid} has updated"}`);
+            } catch(e) {
+                errorHandler(res, 500);
+            }            
         })
 }
 
