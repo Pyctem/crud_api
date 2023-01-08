@@ -157,7 +157,7 @@ export function putHandler (req, res) {
         })
 }
 
-function errorHandler (res, code) {
+export function errorHandler (res, code) {
     res.statusCode = code;
     res.end(`<h1>${code}</h1><h2>${http.STATUS_CODES[code]}</h2>`);
 }
