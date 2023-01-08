@@ -91,25 +91,24 @@ export function deleteHandler (req, res) {
 
     const [id, ...other] = match[1]?.match(ID_REGEX) ?? [];
     
-    if (other.length) {
-        return errorHandler(res, 400);
-    }
-
-    if (!id) {
-        return errorHandler(res, 400);
+    if (!id || other.length) {
+        return errorHandler(res, 404);
     }
 
     const uuid = id.slice(1);
-
-    if (!users.has(uuid)) {
+    
+    if (!UUID_REGEX.test(uuid)) {
         return errorHandler(res, 400);
     }
 
-    users.delete(uuid);
+    if (!users.has(uuid)) {
+        return errorHandler(res, 404);
+    }
 
-    console.log(users);
+    users.delete(uuid);
     
     res.setHeader('Content-Type', 'application/json;charset=utf-8');
+    res.statusCode = 204;
     res.end(`{"message": "User ${uuid} has deleted"}`);
 }
 
