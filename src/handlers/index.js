@@ -1,8 +1,9 @@
 import url from "node:url";
+import http from "node:http";
 import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import { users } from "../data/index.js";
-import { API_REGEX, ID_REGEX } from "../constants.js";
+import { API_REGEX, ID_REGEX, UUID_REGEX } from "../constants.js";
 
 export function getHandler (req, res) {
     const { pathname } = url.parse(req.url);
@@ -20,6 +21,11 @@ export function getHandler (req, res) {
 
     if (id) {
         const uuid = id.slice(1);
+
+        if (!UUID_REGEX.test(uuid)) {
+            return errorHandler(res, 400);
+        }
+
         if (users.has(uuid)) {
             res.setHeader('Content-Type', 'application/json;charset=utf-8');
             return res.end(JSON.stringify(users.get(uuid)));
