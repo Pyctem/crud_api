@@ -51,7 +51,7 @@ export function postHandler (req, res) {
     const [...other] = match[1]?.match(ID_REGEX) ?? [];
 
     if (other.length) {
-        return errorHandler(res, 400);
+        return errorHandler(res, 404);
     }
 
     const buffers = [];
@@ -62,10 +62,22 @@ export function postHandler (req, res) {
             const buffer = Buffer.concat(buffers);
             const uuid = crypto.randomUUID();
 
-            users.set(uuid, { ...JSON.parse(buffer.toString()), id: uuid });
+            try {
+                const user = JSON.parse(buffer.toString());
 
-            res.setHeader('Content-Type', 'application/json;charset=utf-8');
-            res.end(`{"message": "User ${uuid} has added"}`);
+                if (typeof user?.username === 'string' && typeof user?.age === 'number' && Array.isArray(user?.hobbies)) {
+                    users.set(uuid, { ...JSON.parse(buffer.toString()), id: uuid });
+
+                    res.setHeader('Content-Type', 'application/json;charset=utf-8');
+                    res.statusCode = 201;
+
+                    return res.end(JSON.stringify(users.get(uuid)));
+                }
+                
+                return errorHandler(res, 400);
+            } catch (e) {
+                return errorHandler(res, 500);
+            }
         })
 }
 
